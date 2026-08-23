@@ -1,0 +1,44 @@
+/* App Component Styles */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-paper);
+}
+
+.main-content {
+  flex: 1;
+  padding: 0;
+}
+
+.loading-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: var(--color-forest);
+  color: var(--color-light-text);
+}
+
+.loading-page .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.loading-page p {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 0;
+  }
+
+  .main-content.home-content {
+    padding: 0;
+  }
+}

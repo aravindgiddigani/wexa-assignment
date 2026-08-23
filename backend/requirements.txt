@@ -1,0 +1,5 @@
+Django>=5.2.3
+djangorestframework>=3.18.0
+django-cors-headers>=4.6.0
+python-dotenv>=1.0.0
+neo4j>=5.20.0

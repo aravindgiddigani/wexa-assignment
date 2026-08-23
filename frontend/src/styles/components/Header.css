@@ -1,0 +1,93 @@
+/* Header Component Styles */
+.header {
+  background: var(--color-forest-deep);
+  color: var(--color-light-text);
+  padding: var(--spacing-lg) 0;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header-home {
+  position: absolute;
+  width: 100%;
+  background: transparent;
+  box-shadow: none;
+  transition: background var(--transition-base), box-shadow var(--transition-base);
+}
+
+.header-home.header-scrolled {
+  position: fixed;
+  background: var(--color-forest-deep);
+  box-shadow: var(--shadow-md);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  text-decoration: none;
+  color: white;
+}
+
+.logo h1 {
+  font-family: var(--font-display);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-normal);
+  margin: 0;
+  color: var(--color-light-text);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+}
+
+.nav-items {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.user-greeting {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-light-muted);
+}
+
+.header .btn-login,
+.header .btn-register,
+.header .btn-logout {
+  color: var(--color-light-text);
+  border: 1px solid rgba(247, 243, 234, 0.32);
+  background: transparent;
+}
+
+.header .btn-login:hover,
+.header .btn-register:hover,
+.header .btn-logout:hover {
+  color: var(--color-forest-deep);
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    text-align: center;
+  }
+  
+  .logo h1 {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .nav-items {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+}
