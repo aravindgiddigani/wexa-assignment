@@ -336,7 +336,10 @@ def topic_learning_content(name, description, category):
     use_cases = examples.get(category, [f"learning {name}", f"connecting {name} to related concepts", f"comparing {name} with neighboring topics"])
     article = "\n\n".join([
         f"{name} belongs to the {category} domain. {description}. In NexusKnowledge, this topic is presented as part of a connected body of ideas rather than as an isolated definition.",
+        f"A useful way to approach {name} is to start with its purpose, then identify the problem it solves and the constraints it introduces. This makes the topic easier to compare with nearby ideas in the {category} space.",
         f"In practice, {name} can be understood through examples such as {use_cases[0]}, {use_cases[1]}, and {use_cases[2]}. These examples show why context, dependencies, and neighboring concepts matter when people learn or make technical decisions.",
+        f"When working with {name}, pay attention to the boundary between the concept and the tools built around it. The surrounding ecosystem often determines how a technique is adopted, tested, monitored, and maintained over time.",
+        f"A strong learning path for {name} combines a small practical example with deliberate comparison. Try connecting the topic to one prerequisite, one related idea, and one application so that its role becomes clear beyond a single definition.",
         f"The graph model links {name} to other topics with typed relationships such as BUILDS_ON, RELATED_TO, PART_OF, and APPLIES_TO. CognoDB makes those paths queryable, allowing users to move from this topic to useful prerequisites, applications, and related technologies."
     ])
     resource_links = topic_resources.get(name, resources.get(category, ["https://cognodb.com/"]))
