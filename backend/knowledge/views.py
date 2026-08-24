@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from backend.utils import neo4j_session
 from users.authentication import CognoDBTokenAuthentication
+from neo4j.exceptions import ServiceUnavailable
 import logging
 
 logger = logging.getLogger(__name__)
@@ -82,7 +83,8 @@ COUNT_QUERIES = {
 def handle_error(e, message):
     """Handle and log errors"""
     logger.error(f"{message}: {e}")
-    return Response({'error': message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    error_status = status.HTTP_503_SERVICE_UNAVAILABLE if isinstance(e, (ConnectionError, ServiceUnavailable)) else status.HTTP_500_INTERNAL_SERVER_ERROR
+    return Response({'error': message}, status=error_status)
 
 
 def map_topic_record(record):
@@ -113,11 +115,15 @@ class HealthCheckView(APIView):
     def get(self, request):
         try:
             with neo4j_session() as session:
-                session.run("RETURN 1")
+                session.run("RETURN 1").consume()
             return Response({'status': 'healthy', 'database': 'connected'})
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            return Response({'status': 'unhealthy', 'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({
+                'status': 'unhealthy',
+                'database': 'unavailable',
+                'error': 'Database is unavailable. Please try again later.'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 class TopicListView(BaseAuthenticatedView):
@@ -268,7 +274,7 @@ class PrerequisitesView(BaseAuthenticatedView):
         try:
             with neo4j_session() as session:
                 result = session.run("""
-                          MATCH (t:Topic {name: $name})-[:BUILDS_ON*]->(prereq:Topic)
+                          MATCH (prereq:Topic)-[:BUILDS_ON*]->(t:Topic {name: $name})
                           RETURN DISTINCT prereq.name as name, prereq.description as description,
                               prereq.category as category, prereq.importance as importance
                     ORDER BY prereq.importance DESC

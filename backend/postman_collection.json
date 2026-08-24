@@ -14,6 +14,11 @@
       "key": "access_token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -62,6 +67,53 @@
               "path": ["api", "auth", "login", ""]
             }
           },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.access_token) pm.collectionVariables.set('access_token', body.access_token);",
+                  "if (body.refresh_token) pm.collectionVariables.set('refresh_token', body.refresh_token);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Refresh Access Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.access_token) pm.collectionVariables.set('access_token', body.access_token);"
+                ]
+              }
+            }
+          ],
           "response": []
         },
         {
@@ -152,7 +204,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"topic_name\": \"Artificial Intelligence\"\n}",
+              "raw": "{\n  \"topic_name\": \"Deep Learning\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -236,7 +288,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"category\": \"Technology\"\n}",
+              "raw": "{\n  \"category\": \"Artificial Intelligence\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -264,7 +316,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"topic_name\": \"Artificial Intelligence\",\n  \"hops\": 2\n}",
+              "raw": "{\n  \"topic_name\": \"Machine Learning\",\n  \"hops\": 2\n}",
               "options": {
                 "raw": {
                   "language": "json"

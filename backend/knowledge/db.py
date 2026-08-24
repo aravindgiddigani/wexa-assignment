@@ -26,6 +26,7 @@ class Neo4jConnection:
     def connect(self):
         """Establish connection to Neo4j/CognoDB"""
         if self._driver is None:
+            driver = None
             try:
                 uri = settings.NEO4J_URI
                 user = settings.NEO4J_USER
@@ -38,14 +39,19 @@ class Neo4jConnection:
                 if not password:
                     raise ValueError("NEO4J_PASSWORD is not configured. Please check your settings.")
                 
-                self._driver = GraphDatabase.driver(uri, auth=(user, password))
-                self._driver.verify_connectivity()
+                driver = GraphDatabase.driver(uri, auth=(user, password))
+                driver.verify_connectivity()
+                self._driver = driver
                 self._connection_attempts = 0
                 logger.info("Successfully connected to CognoDB")
             except AuthError as e:
+                if driver:
+                    driver.close()
                 logger.error(f"Authentication failed: {e}")
                 raise ConnectionError("Invalid CognoDB credentials. Please check NEO4J_USER and NEO4J_PASSWORD.")
             except ServiceUnavailable as e:
+                if driver:
+                    driver.close()
                 self._connection_attempts += 1
                 if self._connection_attempts < self._max_attempts:
                     logger.warning(f"Connection attempt {self._connection_attempts} failed, retrying...")
@@ -53,6 +59,8 @@ class Neo4jConnection:
                 logger.error(f"Failed to connect to CognoDB after {self._max_attempts} attempts: {e}")
                 raise ConnectionError("Unable to connect to CognoDB. Please check NEO4J_URI and network connectivity.")
             except Exception as e:
+                if driver:
+                    driver.close()
                 logger.error(f"Unexpected error connecting to CognoDB: {e}")
                 raise ConnectionError(f"Connection error: {str(e)}")
         return self._driver
