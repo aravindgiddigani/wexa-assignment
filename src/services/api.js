@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://wexa-assignment-1.onrender.com/api'
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -29,7 +31,7 @@ api.interceptors.response.use(
 
     originalRequest._retry = true
     refreshRequest ||= axios.post(
-      `${import.meta.env.VITE_API_BASE_URL || '/api'}/auth/refresh/`,
+      `${API_BASE_URL}/auth/refresh/`,
       { refresh_token: refreshToken },
       { headers: { 'Content-Type': 'application/json' } }
     ).then(({ data }) => {
