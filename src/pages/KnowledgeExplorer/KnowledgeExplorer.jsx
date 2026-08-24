@@ -9,6 +9,16 @@ const sectionImages = {
   'Build & Ship': 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=85'
 }
 
+const categoryImages = {
+  'Programming Languages': 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=85',
+  'Artificial Intelligence': 'https://images.unsplash.com/photo-1555255707-c07966088b7b?auto=format&fit=crop&w=1200&q=85',
+  'Data Science': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=85',
+  Databases: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=85',
+  default: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=85'
+}
+
+const getTopicImage = (topic) => topic?.topic_image || categoryImages[topic?.category] || categoryImages.default
+
 const getErrorMessage = (error, fallback) => {
   if (error.response) return `${error.response.status} - ${error.response.data.error || fallback}`
   if (error.request) return 'Could not reach the knowledge graph. Check that the backend is running.'
@@ -26,19 +36,17 @@ const KnowledgeExplorer = () => {
   const [relatedTopics, setRelatedTopics] = useState([])
   const [relationships, setRelationships] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [activeTab, setActiveTab] = useState('related')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const fetchTopics = async () => {
-    const nextTopics = await knowledgeService.getAllTopics()
-    setTopics(nextTopics)
-  }
-
-  const fetchCategories = async () => {
-    const nextCategories = await knowledgeService.getAllCategories()
-    setCategories(nextCategories)
+  const clearTopic = () => {
+    setSelectedTopic(null)
+    setSelectedTopicData(null)
+    setRelatedTopics([])
+    setRelationships([])
   }
 
   const handleTopicClick = async (topicName) => {
@@ -64,10 +72,17 @@ const KnowledgeExplorer = () => {
 
   const handleSearch = async (event) => {
     event.preventDefault()
-    if (!searchTerm.trim()) return
+    const query = searchTerm.trim()
+    if (!query) {
+      setAppliedSearchTerm('')
+      await handleCategoryFilter(selectedCategory)
+      return
+    }
     try {
       setLoading(true)
-      setTopics(await knowledgeService.searchTopics(searchTerm.trim()))
+      setAppliedSearchTerm(query)
+      setSelectedCategory('')
+      setTopics(await knowledgeService.searchTopics(query))
       setError(null)
     } catch (requestError) {
       setError(getErrorMessage(requestError, 'Could not search the knowledge graph.'))
@@ -78,6 +93,8 @@ const KnowledgeExplorer = () => {
 
   const handleCategoryFilter = async (category) => {
     setSelectedCategory(category)
+    setAppliedSearchTerm('')
+    setSearchTerm('')
     try {
       setLoading(true)
       setTopics(category ? await knowledgeService.getTopicsByCategory(category) : await knowledgeService.getAllTopics())
@@ -93,14 +110,16 @@ const KnowledgeExplorer = () => {
     const loadInitialData = async () => {
       try {
         setLoading(true)
-        const [nextSections, nextOverview] = await Promise.all([
+        const [nextSections, nextOverview, nextTopics, nextCategories] = await Promise.all([
           knowledgeService.getSections(),
           knowledgeService.getOverview(),
-          fetchTopics(),
-          fetchCategories()
+          knowledgeService.getAllTopics(),
+          knowledgeService.getAllCategories()
         ])
         setSections(nextSections)
         setOverview(nextOverview)
+        setTopics(nextTopics)
+        setCategories(nextCategories)
         setSelectedSection(nextSections[0] || null)
       } catch (requestError) {
         setError(getErrorMessage(requestError, 'Could not load the knowledge graph.'))
@@ -112,9 +131,24 @@ const KnowledgeExplorer = () => {
     void loadInitialData()
   }, [])
 
-  const visibleTopics = selectedSection && !searchTerm && !selectedCategory
+  const visibleTopics = selectedSection && !appliedSearchTerm && !selectedCategory
     ? topics.filter((topic) => selectedSection.topics.includes(topic.name))
     : topics
+
+  const handleClearFilters = async () => {
+    try {
+      setLoading(true)
+      setSearchTerm('')
+      setAppliedSearchTerm('')
+      setSelectedCategory('')
+      setTopics(await knowledgeService.getAllTopics())
+      setError(null)
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, 'Could not reset the topic list.'))
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="knowledge-explorer">
@@ -160,13 +194,14 @@ const KnowledgeExplorer = () => {
 
         <div className="discovery-controls">
           <div><p className="explorer-kicker">Find a path</p><span>Search the topics inside this graph.</span></div>
-          <form onSubmit={handleSearch} className="explorer-search"><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search topics" aria-label="Search topics" /><button type="submit">Search</button></form>
-          <select value={selectedCategory} onChange={(event) => handleCategoryFilter(event.target.value)} aria-label="Filter by category"><option value="">All categories</option>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select>
+          <form onSubmit={handleSearch} className="explorer-search"><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search topics" aria-label="Search topics" /><button type="submit" disabled={loading}>Search</button></form>
+          <select value={selectedCategory} onChange={(event) => handleCategoryFilter(event.target.value)} aria-label="Filter by category" disabled={loading}><option value="">All categories</option>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select>
+          {(appliedSearchTerm || selectedCategory) && <button className="clear-filters-button" type="button" onClick={handleClearFilters} disabled={loading}>Clear filters</button>}
         </div>
 
         {selectedTopicData && <section className="topic-reading">
           <div className="topic-reading-heading"><div><p className="explorer-kicker">Topic article</p><h2>{selectedTopicData.name}</h2><p>{selectedTopicData.description}</p></div><span>{selectedTopicData.category}</span></div>
-          <div className="topic-visuals"><img src={selectedTopicData.topic_image} alt={`${selectedTopicData.name} concept`} /><div><img src={selectedTopicData.code_image} alt="Code illustration" /><img src={selectedTopicData.graph_image} alt="Graph database illustration" /></div></div>
+          <div className="topic-visuals"><img src={getTopicImage(selectedTopicData)} onError={(event) => { event.currentTarget.src = categoryImages.default }} alt={`${selectedTopicData.name} concept`} /><div><img src={selectedTopicData.code_image || categoryImages.default} onError={(event) => { event.currentTarget.src = categoryImages.default }} alt="Code illustration" /><img src={selectedTopicData.graph_image || categoryImages.default} onError={(event) => { event.currentTarget.src = categoryImages.default }} alt="Graph database illustration" /></div></div>
           <div className="topic-article">{selectedTopicData.article_content?.split('\n\n').map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
           <div className="topic-learning-grid">
             <div><span>Real-world uses</span><ul>{selectedTopicData.real_world_examples?.map((example) => <li key={example}>{example}</li>)}</ul></div>
@@ -176,10 +211,10 @@ const KnowledgeExplorer = () => {
           <div className="topic-resources"><span>Real-world resources</span><div>{selectedTopicData.resource_links?.map((link) => <a href={link} key={link} target="_blank" rel="noreferrer">{new URL(link).hostname.replace('www.', '')} <b>↗</b></a>)}</div></div>
         </section>}
 
-        <section className="graph-workbench">
+        <section className="graph-workbench" aria-busy={loading}>
           <div className="workbench-grid">
-            <aside className="topic-rail"><div className="rail-label">{visibleTopics.length} topics in view</div>{loading && !topics.length ? <p className="empty-state">Loading graph...</p> : visibleTopics.map((topic) => <button key={topic.name} className={selectedTopic === topic.name ? 'topic-item active' : 'topic-item'} onClick={() => handleTopicClick(topic.name)}><span>{topic.name}</span><small>{topic.category}</small><b>{topic.importance}</b></button>)}{!loading && !visibleTopics.length && <p className="empty-state">No topics found.</p>}</aside>
-            <div className="connection-panel">{selectedTopic ? <><div className="connection-heading"><div><p className="explorer-kicker">Selected topic</p><h3>{selectedTopic}</h3></div><button className="clear-button" onClick={() => setSelectedTopic(null)}>Clear</button></div><div className="graph-tabs"><button className={activeTab === 'related' ? 'active' : ''} onClick={() => setActiveTab('related')}>Related topics</button><button className={activeTab === 'relationships' ? 'active' : ''} onClick={() => setActiveTab('relationships')}>Relationships</button></div>{activeTab === 'related' ? <div className="connection-list">{relatedTopics.map((topic) => <button key={topic.name} className="connection-item" onClick={() => handleTopicClick(topic.name)}><span><strong>{topic.name}</strong><small>{topic.category}</small></span><b>{topic.distance} hops</b></button>)}{!relatedTopics.length && <p className="empty-state">No related topics found.</p>}</div> : <div className="relationship-list">{relationships.map((relationship, index) => <div className="relationship-item" key={`${relationship.from_topic}-${relationship.to_topic}-${index}`}><strong>{relationship.from_topic}</strong><span>{relationship.relationship_type.replace('_', ' ')}</span><strong>{relationship.to_topic}</strong></div>)}{!relationships.length && <p className="empty-state">No direct relationships found.</p>}</div>}</> : <div className="workbench-empty"><span>+</span><h3>Select a topic</h3><p>Choose a node from the left to reveal its neighboring ideas and paths.</p></div>}</div>
+            <aside className="topic-rail"><div className="rail-label">{loading ? 'Loading topics...' : `${visibleTopics.length} topics in view`}</div>{loading && !topics.length ? <p className="empty-state">Loading graph...</p> : visibleTopics.map((topic) => <button key={topic.name} className={selectedTopic === topic.name ? 'topic-item active' : 'topic-item'} onClick={() => handleTopicClick(topic.name)} disabled={loading}><span>{topic.name}</span><small>{topic.category}</small><b>{topic.importance}</b></button>)}{!loading && !visibleTopics.length && <p className="empty-state">No topics found. Try another search or filter.</p>}</aside>
+            <div className="connection-panel">{selectedTopic ? <><div className="connection-heading"><div><p className="explorer-kicker">Selected topic</p><h3>{selectedTopic}</h3></div><button className="clear-button" onClick={clearTopic}>Clear</button></div><div className="graph-tabs"><button type="button" className={activeTab === 'related' ? 'active' : ''} onClick={() => setActiveTab('related')}>Related topics</button><button type="button" className={activeTab === 'relationships' ? 'active' : ''} onClick={() => setActiveTab('relationships')}>Relationships</button></div>{loading ? <p className="empty-state">Loading connections...</p> : activeTab === 'related' ? <div className="connection-list">{relatedTopics.map((topic) => <button key={topic.name} className="connection-item" onClick={() => handleTopicClick(topic.name)}><span><strong>{topic.name}</strong><small>{topic.category}</small></span><b>{topic.distance} hops</b></button>)}{!relatedTopics.length && <p className="empty-state">No related topics found.</p>}</div> : <div className="relationship-list">{relationships.map((relationship, index) => <div className="relationship-item" key={`${relationship.from_topic}-${relationship.to_topic}-${index}`}><strong>{relationship.from_topic}</strong><span>{relationship.relationship_type.replaceAll('_', ' ')}</span><strong>{relationship.to_topic}</strong></div>)}{!relationships.length && <p className="empty-state">No direct relationships found.</p>}</div>}</> : <div className="workbench-empty"><span>+</span><h3>Select a topic</h3><p>Choose a node from the left to reveal its neighboring ideas and paths.</p></div>}</div>
           </div>
         </section>
 

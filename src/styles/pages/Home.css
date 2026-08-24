@@ -87,8 +87,8 @@
   grid-template-columns: 90px minmax(0, 1fr) minmax(0, 1fr);
   gap: clamp(28px, 5vw, 76px);
   align-items: center;
-  min-height: 650px;
-  padding: 84px clamp(28px, 8vw, 120px);
+  min-height: 560px;
+  padding: 64px clamp(28px, 8vw, 120px);
   border-bottom: 1px solid var(--color-line);
 }
 
@@ -110,7 +110,7 @@
   .hero-image { min-height: 42vh; border-left: 0; border-top: 1px solid var(--border-lighter); }
   .home-intro { grid-template-columns: 1fr; padding: 68px 28px 50px; }
   .knowledge-section,
-  .knowledge-section:nth-child(even) { grid-template-columns: 42px minmax(0, 1fr); gap: 16px; min-height: 0; padding: 64px 28px; }
+  .knowledge-section:nth-child(even) { grid-template-columns: 42px minmax(0, 1fr); gap: 16px; min-height: 0; padding: 52px 28px; }
   .section-copy,
   .knowledge-section:nth-child(even) .section-copy { grid-column: 2; grid-row: 1; }
   .section-media,
