@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://wexa-assignment-1.onrender.com',
+        target: 'https://wexa-assignment-5yur.onrender.com/',
         changeOrigin: true,
       }
     }
