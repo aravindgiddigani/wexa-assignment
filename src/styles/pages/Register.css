@@ -1,0 +1,9 @@
+@import './Login.css';
+
+.register-container { max-width: 1180px; }
+.register-form { margin-bottom: var(--spacing-lg); }
+.form-row { gap: var(--spacing-lg); }
+
+@media (max-width: 560px) {
+  .form-row { gap: 0 12px; }
+}
