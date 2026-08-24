@@ -13,7 +13,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-          value: "wexa-assignment-1.onrender.com"
+          value: "https://wexa-assignment-5yur.onrender.com/"
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: NEO4J_URI
